@@ -193,17 +193,17 @@
 
     /* Formal */
     formal
-    : OBJECTID ':' TYPEID
-    { $$ = formal($1, $3); }
+      : OBJECTID ':' TYPEID
+        { $$ = formal($1, $3); }
 
     /* Formal list */
     formal_list
-    : /* empty */
-    { $$ = nil_Formals(); }
-    | formal /* If only one call */
-    { $$ = single_Formals($1); }
-    | formal_list ',' formal
-    { $$ = append_Formals($1, single_Formals($3)); }
+      : /* empty */
+        { $$ = nil_Formals(); }
+      | formal /* If only one call */
+        { $$ = single_Formals($1); }
+      | formal_list ',' formal
+        { $$ = append_Formals($1, single_Formals($3)); }
 
     /* Feature rules. Feature list may be empty */
     feature
@@ -309,21 +309,25 @@
         { $$ = bool_const($1); }
       ;
 
-    expression_list : /* empty */
+    expression_list
+      : expression ';'
+        { $$ = single_Expressions($1); }
+      | expression_list expression ';'
+        { $$ = append_Expressions($1, single_Expressions($2)); }
+      | error ';'
+
+     let_list
+      : IN expression
+        { $$ = $2; }
+      | ',' OBJECTID ':' TYPEID let_list
+        { $$ = let($2, $4, no_expr(), $5); }
+      | ',' OBJECTID ':' TYPEID ASSIGN expression let_list
+        { $$ = let($2, $4, $6, $7); }
+      | IN error
+      | error let_list
 
 
-
-    let_list : /* empty */
     case_list: /* empty */
-
-
-
-
-
-
-
-
-
 
     /* end of grammar */
     %%
