@@ -149,14 +149,15 @@
     /* Precedence declarations go here. */
 
     /* From cool-manual.pdf 11.1 Precedence. */
+    /* Compare operators */
     %nonassoc LE '<' '='
+
     %nonassoc '@'
     %nonassoc '.'
 
-    %precedence NOT
-    %precedence ISVOID
-    %precedence '~'
-
+    %left NOT
+    %left ISVOID
+    %left '~'
     %left '+' '-'
     %left '*' '/'
 
@@ -192,10 +193,36 @@
     {  $$ = nil_Features(); }
     
 
-        /* formals */
+    /* Formal */
     formal
     : OBJECTID ':' TYPEID
     { $$ = formal($1, $3); }
+
+    /* Formal list */
+    formal_list
+    : /* empty */
+    { $$ = nil_Formals(); }
+    | formal /* If only one call */
+    { $$ = single_Formals($1); }
+    | formal_list ',' formal
+    { $$ = append_Formals($1, single_Formals($3)); }
+
+    /* Feature rules. Feature list may be empty */
+    feature
+    : OBJECTID '(' formal_list ')' ':' TYPEID '{' expression '}'
+    { @$ = @9; $$ = method($1, $3, $6, $8); }
+    | OBJECTID ':' TYPEID
+    { $$ = attr($1, $3, no_expr()); }
+    | OBJECTID ':' TYPEID ASSIGN expression
+    { $$ = attr($1, $3, $5); }
+    | error
+
+    /* feature list */
+    feature_list
+    : /* empty */
+    {  $$ = nil_Features(); }
+    | feature_list feature ';'
+    { $$ = append_Features($1, single_Features($2)); }
     
     /* end of grammar */
     %%
