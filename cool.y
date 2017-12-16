@@ -153,20 +153,17 @@
 
     /* From cool-manual.pdf 11.1 Precedence. */
     /* Compare operators */
-    %nonassoc LE '<' '='
 
+    %right ASSIGN
+    %left NOT
+    %nonassoc LE '<' '='
+    %left '+' '-'
+    %left '*' '/'
+    %left ISVOID
+    %left '~'
     %nonassoc '@'
     %nonassoc '.'
 
-    %left NOT
-    %left ISVOID
-    %left '~'
-    %left '+' '-'
-    %left '*' '/'
-
-    %right ASSIGN
-
-    
     %%
     /* 
     Save the root of the abstract syntax tree in a global variable.
@@ -230,6 +227,29 @@
         { $$ = single_Expressions($1); }
       | arguments ',' expression
         { $$ = append_Expressions($1, single_Expressions($3)); }
+
+    expression_list
+      : expression ';'
+        { $$ = single_Expressions($1); }
+      | expression_list expression ';'
+        { $$ = append_Expressions($1, single_Expressions($2)); }
+      | error ';'
+
+     let_list
+      : IN expression
+        { $$ = $2; }
+      | ',' OBJECTID ':' TYPEID let_list
+        { $$ = let($2, $4, no_expr(), $5); }
+      | ',' OBJECTID ':' TYPEID ASSIGN expression let_list
+        { $$ = let($2, $4, $6, $7); }
+      | IN error
+      | error let_list
+
+    case_list
+      : OBJECTID ':' TYPEID DARROW expression ';'
+        { $$ = single_Cases(branch($1, $3, $5)); }
+      | case_list OBJECTID ':' TYPEID DARROW expression ';'
+        { $$ = append_Cases($1, single_Cases(branch($2, $4, $6))); }
 
     expression
       : OBJECTID ASSIGN expression
@@ -310,28 +330,6 @@
         { $$ = bool_const($1); }
       ;
 
-    expression_list
-      : expression ';'
-        { $$ = single_Expressions($1); }
-      | expression_list expression ';'
-        { $$ = append_Expressions($1, single_Expressions($2)); }
-      | error ';'
-
-     let_list
-      : IN expression
-        { $$ = $2; }
-      | ',' OBJECTID ':' TYPEID let_list
-        { $$ = let($2, $4, no_expr(), $5); }
-      | ',' OBJECTID ':' TYPEID ASSIGN expression let_list
-        { $$ = let($2, $4, $6, $7); }
-      | IN error
-      | error let_list
-
-    case_list
-      : OBJECTID ':' TYPEID DARROW expression ';'
-        { $$ = single_Cases(branch($1, $3, $5)); }
-      | case_list OBJECTID ':' TYPEID DARROW expression ';'
-        { $$ = append_Cases($1, single_Cases(branch($2, $4, $6))); }
 
     /* end of grammar */
     %%
