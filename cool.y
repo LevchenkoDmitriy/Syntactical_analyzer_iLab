@@ -189,6 +189,7 @@
     stringtable.add_string(curr_filename)); }
     | CLASS TYPEID INHERITS TYPEID '{' feature_list '}' ';'
     { $$ = class_($2,$4,$6,stringtable.add_string(curr_filename)); }
+    | error
     ;
 
     /* Formal */
@@ -326,8 +327,11 @@
       | IN error
       | error let_list
 
-
-    case_list: /* empty */
+    case_list
+      : OBJECTID ':' TYPEID DARROW expression ';'
+        { $$ = single_Cases(branch($1, $3, $5)); }
+      | case_list OBJECTID ':' TYPEID DARROW expression ';'
+        { $$ = append_Cases($1, single_Cases(branch($2, $4, $6))); }
 
     /* end of grammar */
     %%
