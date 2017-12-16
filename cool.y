@@ -136,9 +136,32 @@
     
     /* You will want to change the following line. */
     %type <features> dummy_feature_list
+    %type <feature> feature
+    %type <features> feature_list
+    %type <formal> formal
+    %type <formals> formal_list
+    %type <expression> expression
+    %type <expression> let_list
+    %type <expressions> arguments
+    %type <expressions> expression_list
+    %type <cases> case_list
     
     /* Precedence declarations go here. */
-    
+
+    /* From cool-manual.pdf 11.1 Precedence. */
+    %nonassoc LE '<' '='
+    %nonassoc '@'
+    %nonassoc '.'
+
+    %precedence NOT
+    %precedence ISVOID
+    %precedence '~'
+
+    %left '+' '-'
+    %left '*' '/'
+
+    %right ASSIGN
+
     
     %%
     /* 
@@ -168,6 +191,11 @@
     dummy_feature_list:		/* empty */
     {  $$ = nil_Features(); }
     
+
+        /* formals */
+    formal
+    : OBJECTID ':' TYPEID
+    { $$ = formal($1, $3); }
     
     /* end of grammar */
     %%
